@@ -3,6 +3,7 @@ const express = require("express");
 const logger = require('morgan');
 
 const reportRouter = require('./routes/report');
+const queryRouter = require('./routes/query');
 
 const app = express();
 
@@ -11,5 +12,6 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
 app.use('/api/report', reportRouter);
+app.use('/api/query/', queryRouter);
 
 module.exports = app;
