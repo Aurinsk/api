@@ -25,12 +25,15 @@ router.get('/:uuid/:type/:time', function(req, res) {
 
     const queryApi = new InfluxDB({url, token}).getQueryApi(org)
     const fluxQuery = `from(bucket:"reports") |> range(start: -${time}) |> filter(fn: (r) => r._measurement == "server_report" and r._field == "${type}" and r.serverID == "${uuid}")`;
-    let values = [];
+    let data = [];
+    let valueArr = [];
+    let timeArr = [];
 
     queryApi.queryRows(fluxQuery, {
         next(row: string[], tableMeta: FluxTableMetaData) {
-            const o = tableMeta.toObject(row)
-            values.push(o._value);
+            const o = tableMeta.toObject(row);
+            valueArr.push(o._value);
+            timeArr.push(o._time);
             // console.log(
             //     `${o._time} ${o._measurement} in '${o.location}' (${o.example}): ${o._field}=${o._value}`
             // )
@@ -39,8 +42,9 @@ router.get('/:uuid/:type/:time', function(req, res) {
             console.error(error)
         },
         complete() {
-            console.dir(values);
-            res.json(values);
+            data.push(valueArr, timeArr);
+            console.dir(data);
+            res.status(200).json(data);
         },
     })
 
