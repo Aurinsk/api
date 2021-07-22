@@ -1,8 +1,11 @@
 const express = require('express');
 const router = express.Router();
+const pool = require('../utils/db');
+
 require('dotenv').config();
 
 const {InfluxDB, Point, HttpError} = require('@influxdata/influxdb-client');
+const SqlString = require('sqlstring');
 
 /* ----- */
 
@@ -13,14 +16,29 @@ const bucket = process.env.INFLUX_BUCKET;
 
 /* ----- */
 
-router.post('/', function(req, res) {
+router.post('/', async (req, res) => {
     console.log(req.body);
     const data = req.body;
+
+    // check mariadb to see if this is a new monitor
+
+    const existsQuery = SqlString.format('SELECT * FROM monitors WHERE uuid=?', [data.uuid]);
+    const existsConn = await pool.getConnection();
+    const existsResponse = await existsConn.query(existsQuery);
+
+    if (!existsResponse[0]) {
+        const addQuery = SqlString.format('INSERT INTO monitors (uuid, ip) VALUES (?, ?)', [data.uuid, data.ip]);
+        const addConn = await pool.getConnection();
+        const addResponse = await addConn.query(addQuery);
+        addConn.end();
+    }
+
+    existsConn.end();
 
     const writeApi = new InfluxDB({url, token}).getWriteApi(org, bucket, 'ns');
 
     const point1 = new Point('server_report')
-        .tag('serverID', data.uuid)
+        .tag('uuid', data.uuid)
         .floatField('player_count', data.playercount)
         .floatField('cpu_usage', data.cpuload)
         .floatField('memory_usage', parseInt(data.memoryusage) / 1000000)

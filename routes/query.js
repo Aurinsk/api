@@ -1,7 +1,18 @@
 "use strict";
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 const express = require("express");
 const dotenv_1 = require("dotenv");
+const pool = require('../utils/db');
+const SqlString = require('sqlstring');
 const router = express.Router();
 dotenv_1.config();
 const { InfluxDB, Point, HttpError } = require('@influxdata/influxdb-client');
@@ -11,7 +22,7 @@ const token = process.env.INFLUX_TOKEN;
 const org = process.env.INFLUX_ORG;
 const bucket = process.env.INFLUX_BUCKET;
 /* ----- */
-router.get('/:uuid/:type/:time', function (req, res) {
+router.get('/:uuid/:type/:time', (req, res) => {
     const path = req.originalUrl.split("/");
     path.shift();
     const uuid = req.params.uuid;
@@ -40,7 +51,18 @@ router.get('/:uuid/:type/:time', function (req, res) {
             res.status(200).json(data);
         },
     });
-    //res.end();
 });
+router.get('/:ip', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const ip = req.params.ip;
+    const query = SqlString.format('SELECT * FROM monitors WHERE ip = ?', [ip]);
+    const conn = yield pool.getConnection();
+    const response = yield conn.query(query);
+    conn.end();
+    if (response[0]) {
+        res.send('true');
+    }
+    else
+        res.send('false');
+}));
 module.exports = router;
 //# sourceMappingURL=query.js.map

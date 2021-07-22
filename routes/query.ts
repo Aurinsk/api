@@ -1,6 +1,8 @@
 import express = require('express');
 import {config} from "dotenv";
 import {FluxTableMetaData} from "@influxdata/influxdb-client";
+const pool = require('../utils/db');
+const SqlString = require('sqlstring');
 const router = express.Router();
 config();
 
@@ -15,7 +17,7 @@ const bucket = process.env.INFLUX_BUCKET;
 
 /* ----- */
 
-router.get('/:uuid/:type/:time', function(req, res) {
+router.get('/:uuid/:type/:time', (req, res) => {
     const path = req.originalUrl.split("/");
     path.shift();
 
@@ -48,8 +50,19 @@ router.get('/:uuid/:type/:time', function(req, res) {
         },
     })
 
-    //res.end();
-
 });
+
+router.get('/:ip', async (req, res) => {
+    const ip = req.params.ip;
+    const query = SqlString.format('SELECT * FROM monitors WHERE ip = ?', [ip]);
+    const conn = await pool.getConnection();
+    const response = await conn.query(query);
+
+    conn.end();
+
+    if (response[0]) {
+        res.send('true');
+    } else res.send('false');
+})
 
 module.exports = router;
