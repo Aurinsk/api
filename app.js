@@ -5,6 +5,7 @@ const cors = require('cors');
 
 const reportRouter = require('./routes/report');
 const queryRouter = require('./routes/query');
+const createRouter = require('./routes/create');
 
 const app = express();
 
@@ -15,5 +16,6 @@ app.use(express.urlencoded({ extended: false }));
 
 app.use('/api/report', reportRouter);
 app.use('/api/query/', queryRouter);
+app.use('/api/create', createRouter);
 
 module.exports = app;
