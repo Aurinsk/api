@@ -19,6 +19,11 @@ router.post('/', async (req, res) => {
         return;
     }
 
+    if (response[0].email) {
+        res.send('exists');
+        return;
+    }
+
     const updateQuery = SqlString.format('UPDATE monitors SET name=?, email=? WHERE ip=?', [name, email, ip]);
     const updateConn = await pool.getConnection();
     const updateResponse = await updateConn.query(updateQuery);
