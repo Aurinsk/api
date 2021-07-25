@@ -52,6 +52,14 @@ router.get('/:uuid/:type/:time', (req, res) => {
         },
     });
 });
+router.get('/:email', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const email = decodeURIComponent(req.params.email);
+    const query = SqlString.format('SELECT (name, uuid, ip) FROM monitors WHERE email = ?', [email]);
+    const conn = yield pool.getConnection();
+    const response = yield conn.query(query);
+    conn.end();
+    console.log(response[0]);
+}));
 // router.get('/create/:ip', async (req, res) => {
 //     const ip = req.params.ip;
 //     const query = SqlString.format('SELECT * FROM monitors WHERE ip = ?', [ip]);
@@ -68,23 +76,29 @@ router.get('/:uuid/:type/:time', (req, res) => {
 //
 //     res.send('true');
 // })
-router.post('/create', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const ip = req.body.ip;
-    const email = req.body.email;
-    const name = req.body.name;
-    const query = SqlString.format('SELECT * FROM monitors WHERE ip = ?', [ip]);
-    const conn = yield pool.getConnection();
-    const response = yield conn.query(query);
-    conn.end();
-    if (!response[0]) {
-        res.send('false');
-        return;
-    }
-    const updateQuery = SqlString.format('UPDATE monitors SET name=?, email=? WHERE ip=?', [name, email, ip]);
-    const updateConn = yield pool.getConnection();
-    const updateResponse = yield updateConn.query(updateQuery);
-    updateConn.end();
-    res.send('true');
-}));
+// router.post('/create', async (req, res) => {
+//     const ip = req.body.ip;
+//     const email = req.body.email;
+//     const name = req.body.name;
+//
+//     const query = SqlString.format('SELECT * FROM monitors WHERE ip = ?', [ip]);
+//     const conn = await pool.getConnection();
+//     const response = await conn.query(query);
+//
+//     conn.end();
+//
+//     if (!response[0]) {
+//         res.send('false');
+//         return;
+//     }
+//
+//     const updateQuery = SqlString.format('UPDATE monitors SET name=?, email=? WHERE ip=?', [name, email, ip]);
+//     const updateConn = await pool.getConnection();
+//     const updateResponse = await updateConn.query(updateQuery);
+//
+//     updateConn.end();
+//
+//     res.send('true');
+// });
 module.exports = router;
 //# sourceMappingURL=query.js.map

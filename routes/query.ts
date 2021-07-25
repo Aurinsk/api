@@ -52,6 +52,18 @@ router.get('/:uuid/:type/:time', (req, res) => {
 
 });
 
+router.get('/:email', async (req, res) => {
+    const email = decodeURIComponent(req.params.email);
+
+    const query = SqlString.format('SELECT (name, uuid, ip) FROM monitors WHERE email = ?', [email]);
+    const conn = await pool.getConnection();
+    const response = await conn.query(query);
+
+    conn.end();
+
+    console.log(response[0]);
+});
+
 // router.get('/create/:ip', async (req, res) => {
 //     const ip = req.params.ip;
 //     const query = SqlString.format('SELECT * FROM monitors WHERE ip = ?', [ip]);
