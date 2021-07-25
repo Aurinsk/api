@@ -61,7 +61,14 @@ router.get('/:email', async (req, res) => {
 
     conn.end();
 
-    console.log(response[0]);
+    let rows = [];
+    for (const element of response) {
+        if (typeof element === 'object') {
+            rows.push(element);
+        }
+    }
+
+    res.send(rows);
 });
 
 // router.get('/create/:ip', async (req, res) => {
