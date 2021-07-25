@@ -54,11 +54,17 @@ router.get('/:uuid/:type/:time', (req, res) => {
 });
 router.get('/:email', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const email = decodeURIComponent(req.params.email);
-    const query = SqlString.format('SELECT (name, uuid, ip) FROM monitors WHERE email = ?', [email]);
+    const query = SqlString.format('SELECT * FROM monitors WHERE email = ?', [email]);
     const conn = yield pool.getConnection();
     const response = yield conn.query(query);
     conn.end();
-    console.log(response[0]);
+    let rows = [];
+    for (const element of response) {
+        if (typeof element === 'object') {
+            rows.push(element);
+        }
+    }
+    res.send(rows);
 }));
 // router.get('/create/:ip', async (req, res) => {
 //     const ip = req.params.ip;
