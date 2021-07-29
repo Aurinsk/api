@@ -26,7 +26,7 @@ router.get('/:uuid/:type/:time', (req, res) => {
     const time = req.params.time;
 
     const queryApi = new InfluxDB({url, token}).getQueryApi(org)
-    const fluxQuery = `from(bucket:"reports") |> range(start: -${time}) |> filter(fn: (r) => r._measurement == "server_report" and r._field == "${type}" and r.uuid == "${uuid}")`;
+    const fluxQuery = `from(bucket: "reports") |> range(start: -${time}) |> filter(fn: (r) => r["_field"] == ${type}) |> filter(fn: (r) => r["uuid"] == ${uuid}) |> yield(name: "mean")`;
     let data = [];
     let valueArr = [];
     let timeArr = [];
