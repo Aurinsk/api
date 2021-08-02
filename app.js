@@ -2,7 +2,7 @@ const createError = require("http-errors");
 const express = require("express");
 const logger = require('morgan');
 const cors = require('cors');
-const jwt = require('jsonwebtoken');
+const jwt = require('express-jwt');
 
 const reportRouter = require('./routes/report');
 const queryRouter = require('./routes/query');
@@ -15,12 +15,9 @@ app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-app.use((req, res, next) => {
-    app.set('authorization-email', jwt.verify(process.env.JWT_SECRET, req.get('authorization', (err) => {
-        res.sendStatus(401);
-    })))
-    next();
-});
+// check authorization header for a valid jwt
+app.use(jwt({secret: process.env.JWT_SECRET, requestProperty: 'authorizedEmail'}));
+console.log(req.authorizedEmail);
 
 app.use('/api/report', reportRouter);
 app.use('/api/query/', queryRouter);
