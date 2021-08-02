@@ -16,8 +16,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
 // check authorization header for a valid jwt
-app.use(jwt({secret: process.env.JWT_SECRET, requestProperty: 'authorizedEmail'}));
-console.log(req.authorizedEmail);
+app.use(jwt({secret: process.env.JWT_SECRET, algorithms: ['HS256'], requestProperty: 'authorizedEmail'})).unless({path: ['/create']});
 
 app.use('/api/report', reportRouter);
 app.use('/api/query/', queryRouter);
