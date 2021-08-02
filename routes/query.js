@@ -22,14 +22,25 @@ const token = process.env.INFLUX_TOKEN;
 const org = process.env.INFLUX_ORG;
 const bucket = process.env.INFLUX_BUCKET;
 /* ----- */
-router.get('/:uuid/:type/:time', (req, res) => {
+router.get('/:uuid/:type/:time', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const path = req.originalUrl.split("/");
     path.shift();
     const uuid = req.params.uuid;
     const type = req.params.type;
     const time = req.params.time;
+    // authentication check query
+    const query = SqlString.format('SELECT uuid FROM monitors WHERE email=? AND uuid=?', [req.user.email, uuid]);
+    const conn = yield pool.getConnection();
+    const response = yield conn.query(query);
+    conn.end();
+    // check for uuid in response
+    if (response.length < 1) {
+        res.sendStatus(401);
+        res.end();
+        return;
+    }
     const queryApi = new InfluxDB({ url, token }).getQueryApi(org);
-    const fluxQuery = `from(bucket: "reports") |> range(start: -${time}) |> filter(fn: (r) => r["_field"] == ${type}) |> filter(fn: (r) => r["uuid"] == ${uuid}) |> yield(name: "mean")`;
+    const fluxQuery = `from(bucket: "reports") |> range(start: -${time}) |> filter(fn: (r) => r["_field"] == "${type}") |> filter(fn: (r) => r["uuid"] == "${uuid}") |> yield(name: "mean")`;
     let data = [];
     let valueArr = [];
     let timeArr = [];
@@ -51,9 +62,14 @@ router.get('/:uuid/:type/:time', (req, res) => {
             res.status(200).json(data);
         },
     });
-});
+}));
 router.get('/:email', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const email = decodeURIComponent(req.params.email);
+    if (email !== req.user.email) {
+        res.sendStatus(401);
+        res.end();
+        return;
+    }
     const query = SqlString.format('SELECT * FROM monitors WHERE email = ?', [email]);
     const conn = yield pool.getConnection();
     const response = yield conn.query(query);
