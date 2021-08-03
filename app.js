@@ -16,7 +16,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
 // check authorization header for a valid jwt
-app.use(jwt({secret: process.env.JWT_SECRET, algorithms: ['HS256']}).unless({path: ['/api/report']}));
+app.use(jwt({secret: process.env.JWT_SECRET, algorithms: ['HS256']}).unless({path: ['/api/report', /^\/api\/query\/time\/.*/]}));
 
 app.use('/api/report', reportRouter);
 app.use('/api/query/', queryRouter);

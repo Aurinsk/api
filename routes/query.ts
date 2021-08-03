@@ -65,6 +65,35 @@ router.get('/:uuid/:type/:time', async (req, res) => {
 
 });
 
+router.get('/time/:uuid/', async (req, res) => {
+    const uuid = req.params.uuid;
+
+    const queryApi = new InfluxDB({url, token}).getQueryApi(org);
+    const fluxQuery = `from(bucket: "reports") |> range(start: 0, stop: now()) |> filter(fn: (r) => r["uuid"] == "${uuid}") |> keep(columns: ["_time"]) |> last(column: "_time")`;
+    let data = [];
+    let valueArr = [];
+    let timeArr = [];
+
+    queryApi.queryRows(fluxQuery, {
+        next(row: string[], tableMeta: FluxTableMetaData) {
+            const o = tableMeta.toObject(row);
+            valueArr.push(o._value);
+            timeArr.push(o._time);
+            // console.log(
+            //     `${o._time} ${o._measurement} in '${o.location}' (${o.example}): ${o._field}=${o._value}`
+            // )
+        },
+        error(error: Error) {
+            console.error(error)
+        },
+        complete() {
+            data.push(timeArr);
+            res.status(200).json(data[0][0]);
+            res.end();
+        },
+    })
+})
+
 router.get('/:email', async (req, res) => {
     const email = decodeURIComponent(req.params.email);
 
