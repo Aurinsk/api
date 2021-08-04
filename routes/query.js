@@ -75,9 +75,6 @@ router.get('/time/:uuid/', (req, res) => __awaiter(void 0, void 0, void 0, funct
             const o = tableMeta.toObject(row);
             valueArr.push(o._value);
             timeArr.push(o._time);
-            // console.log(
-            //     `${o._time} ${o._measurement} in '${o.location}' (${o.example}): ${o._field}=${o._value}`
-            // )
         },
         error(error) {
             console.error(error);

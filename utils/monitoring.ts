@@ -1,4 +1,5 @@
 const SqlString = require('sqlstring');
+const nodemailer = require('nodemailer');
 const pool = require('../utils/db');
 import {config} from "dotenv";
 config();
@@ -19,7 +20,7 @@ module.exports = {
         const response = await connection.query('SELECT * FROM monitors');
 
         for (const row of response) {
-            console.log(row.uuid);
+            console.log(row);
 
             const queryApi = new InfluxDB({url, token}).getQueryApi(org);
             const fluxQuery = `from(bucket: "reports") |> range(start: 0, stop: now()) |> filter(fn: (r) => r["uuid"] == "${row.uuid}") |> keep(columns: ["_time"]) |> last(column: "_time")`;
@@ -47,10 +48,66 @@ module.exports = {
                             if (lastTime > 2 && status === 'up') {
                                 const setDownQuery = SqlString.format('UPDATE monitors SET status="down" WHERE uuid=?', [row.uuid]);
                                 connection.query(setDownQuery);
+
+                                const messageBody = `
+                                Hello,
+                                
+                                One of your Minecraft server monitors is now down.
+                                Below are the details of the incident.
+                                
+                                Monitor name: ${row.name}
+                                IP: ${row.ip}
+                                Time noticed at: ${new Date().getTime()}
+                                `;
+
+                                const transporter = nodemailer.createTransport('smtp://hwgilbert16@gmail.com:tjzecesmgkxgpmsw@smtp.gmail.com');
+                                const mailOptions = {
+                                    from: 'hwgilbert16@gmail.com',
+                                    to: row.email,
+                                    subject: `${row.name} monitor is DOWN`,
+                                    text: messageBody
+                                }
+
+                                transporter.sendMail(mailOptions, (err, data) => {
+                                    if (err) {
+                                        console.log('Error with sending email');
+                                    } else {
+                                        console.log('Email sent successfully');
+                                    }
+                                });
+
                                 console.log('set down');
                             } else if (lastTime < 2 && status === 'down') {
                                 const setUpQuery = SqlString.format('UPDATE monitors SET status="up" WHERE uuid=?', [row.uuid]);
                                 connection.query(setUpQuery);
+
+                                const messageBody = `
+                                Hello,
+                                
+                                One of your Minecraft server monitors is now back online.
+                                Below are the details of the incident.
+                                
+                                Monitor name: ${row.name}
+                                IP: ${row.ip}
+                                Time noticed at: ${new Date().getTime()}
+                                `;
+
+                                const transporter = nodemailer.createTransport('smtp://hwgilbert16@gmail.com:tjzecesmgkxgpmsw@smtp.gmail.com');
+                                const mailOptions = {
+                                    from: 'hwgilbert16@gmail.com',
+                                    to: row.email,
+                                    subject: `${row.name} monitor is UP`,
+                                    text: messageBody
+                                }
+
+                                transporter.sendMail(mailOptions, (err, data) => {
+                                    if (err) {
+                                        console.log('Error with sending email');
+                                    } else {
+                                        console.log('Email sent successfully');
+                                    }
+                                });
+
                                 console.log('set up');
                             }
                         })
