@@ -111,6 +111,8 @@ router.get('/status/:uuid', async (req, res) => {
     const connection = await pool.getConnection();
     const status = await connection.query(query)[0];
 
+    connection.end();
+
     res.status(200).json(status);
 });
 

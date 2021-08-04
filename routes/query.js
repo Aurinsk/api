@@ -102,6 +102,7 @@ router.get('/status/:uuid', (req, res) => __awaiter(void 0, void 0, void 0, func
     const query = SqlString.format('SELECT status FROM monitors WHERE uuid=?', [uuid]);
     const connection = yield pool.getConnection();
     const status = yield connection.query(query)[0];
+    connection.end();
     res.status(200).json(status);
 }));
 router.get('/:email', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
