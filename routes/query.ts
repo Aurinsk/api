@@ -79,9 +79,6 @@ router.get('/time/:uuid/', async (req, res) => {
             const o = tableMeta.toObject(row);
             valueArr.push(o._value);
             timeArr.push(o._time);
-            // console.log(
-            //     `${o._time} ${o._measurement} in '${o.location}' (${o.example}): ${o._field}=${o._value}`
-            // )
         },
         error(error: Error) {
             console.error(error)
@@ -92,7 +89,30 @@ router.get('/time/:uuid/', async (req, res) => {
             res.end();
         },
     })
-})
+});
+
+router.get('/status/:uuid', async (req, res) => {
+    const uuid = req.params.uuid;
+
+    // authentication check query
+    const checkQuery = SqlString.format('SELECT uuid FROM monitors WHERE email=? AND uuid=?', [req.user.email, uuid]);
+    const checkConn = await pool.getConnection();
+    const checkResponse = await checkConn.query(checkQuery);
+    checkConn.end();
+
+    // check for uuid in response
+    if (checkResponse.length < 1) {
+        res.sendStatus(401);
+        res.end();
+        return;
+    }
+
+    const query = SqlString.format('SELECT status FROM monitors WHERE uuid=?', [uuid]);
+    const connection = await pool.getConnection();
+    const status = await connection.query(query)[0];
+
+    res.status(200).json(status);
+});
 
 router.get('/:email', async (req, res) => {
     const email = decodeURIComponent(req.params.email);
