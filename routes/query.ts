@@ -109,7 +109,7 @@ router.get('/status/:uuid', async (req, res) => {
 
     const query = SqlString.format('SELECT status FROM monitors WHERE uuid=?', [uuid]);
     const connection = await pool.getConnection();
-    const status = await connection.query(query)[0];
+    const status = await connection.query(query);
 
     connection.end();
 
