@@ -57,7 +57,7 @@ module.exports = {
                                 
                                 Monitor name: ${row.name}
                                 IP: ${row.ip}
-                                Time noticed at: ${new Date().getTime()}
+                                Time noticed at: ${new Date()}
                                 `;
 
                                 const transporter = nodemailer.createTransport('smtp://hwgilbert16@gmail.com:tjzecesmgkxgpmsw@smtp.gmail.com');
@@ -89,7 +89,7 @@ module.exports = {
                                 
                                 Monitor name: ${row.name}
                                 IP: ${row.ip}
-                                Time noticed at: ${new Date().getTime()}
+                                Time noticed at: ${new Date()}
                                 `;
 
                                 const transporter = nodemailer.createTransport('smtp://hwgilbert16@gmail.com:tjzecesmgkxgpmsw@smtp.gmail.com');
