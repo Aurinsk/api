@@ -26,7 +26,7 @@ module.exports = {
             const connection = yield pool.getConnection();
             const response = yield connection.query('SELECT * FROM monitors');
             for (const row of response) {
-                console.log(row);
+                //console.log(row);
                 const queryApi = new InfluxDB({ url, token }).getQueryApi(org);
                 const fluxQuery = `from(bucket: "reports") |> range(start: 0, stop: now()) |> filter(fn: (r) => r["uuid"] == "${row.uuid}") |> keep(columns: ["_time"]) |> last(column: "_time")`;
                 let mostRecentTime;
@@ -39,13 +39,13 @@ module.exports = {
                         console.error(error);
                     },
                     complete() {
-                        console.log(mostRecentTime);
+                        //console.log(mostRecentTime);
                         const lastTime = (new Date().getTime() - new Date(mostRecentTime).getTime()) / 60000;
                         const checkStatusQuery = SqlString.format('SELECT status FROM monitors WHERE uuid=?', [row.uuid]);
                         const status = connection.query(checkStatusQuery)
                             .then((status) => {
                             status = status[0].status;
-                            console.log(status);
+                            //console.log(status);
                             if (lastTime > 2 && status === 'up') {
                                 const setDownQuery = SqlString.format('UPDATE monitors SET status="down" WHERE uuid=?', [row.uuid]);
                                 connection.query(setDownQuery);

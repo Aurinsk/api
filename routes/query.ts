@@ -125,20 +125,70 @@ router.get('/:email', async (req, res) => {
         return;
     }
 
+    let rows = [];
+
     const query = SqlString.format('SELECT * FROM monitors WHERE email = ?', [email]);
     const conn = await pool.getConnection();
     const response = await conn.query(query);
 
     conn.end();
 
-    let rows = [];
-    for (const element of response) {
-        if (typeof element === 'object') {
-            rows.push(element);
-        }
+    const rowsCopy = [];
+    // let testPromise = new Promise((res,rej) => {
+    //     rej('test');
+    // });
+    // rowsCopy.push(testPromise);
+    // console.log(rowsCopy);
+    const influxResponses = [];
+
+    // need to push the response to element
+    for (let element of response) {
+        const queryApi = new InfluxDB({url, token}).getQueryApi(org);
+        const fluxQuery = `from(bucket: "reports") |> range(start: 0, stop: now()) |> filter(fn: (r) => r["uuid"] == "${element.uuid}") |> keep(columns: ["_time"]) |> last(column: "_time")`;
+
+        // queryApi.queryRows(fluxQuery, {
+        //     next(row: string[], tableMeta: FluxTableMetaData) {
+        //         const o = tableMeta.toObject(row);
+        //         rowsCopy.push(o._time);
+        //         //element.lastChecked = o._time;
+        //     },
+        //     error(error: Error) {
+        //         console.error(error)
+        //     },
+        //     complete() {
+        //         console.log('response');
+        //         rowsCopy.push(element);
+        //         res.json(rowsCopy);
+        //         // loop runs and finishes request on first run
+        //         // need to make it only send response once loop is fully complete
+        //         // need to use promises probably
+        //     }
+        // })
+
+        influxResponses.push(new Promise((res, rej) => {
+            queryApi.queryRows(fluxQuery, {
+                next(row: string[], tableMeta: FluxTableMetaData) {
+                    const o = tableMeta.toObject(row);
+                    //rowsCopy.push(o._time);
+                    element.lastChecked = o._time;
+                },
+                error(error: Error) {
+                    console.error(error)
+                },
+                complete() {
+                    rowsCopy.push(element);
+                    res('Received');
+                    // loop runs and finishes request on first run
+                    // need to make it only send response once loop is fully complete
+                    // need to use promises probably
+                }
+            })
+        }));
     }
 
-    res.send(rows);
+    Promise.all(influxResponses).then(() => {
+        res.json(rowsCopy);
+    });
 });
 
 // router.get('/create/:ip', async (req, res) => {
