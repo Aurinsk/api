@@ -20,6 +20,15 @@ app.use(express.urlencoded({ extended: false }));
 //app.use(jwt({secret: process.env.JWT_SECRET, algorithms: ['HS256']}).unless({path: ['/api/report', /^\/api\/query\/time\/.*/]}));
 app.use(jwt({secret: process.env.JWT_SECRET, algorithms: ['HS256']}).unless({path: ['/api/report']}));
 
+app.use((err, req, res, next) => {
+    if (err.name === 'UnauthorizedError') {
+        res.sendStatus(401);
+        res.end();
+        return;
+    }
+    next();
+})
+
 setInterval(() => {
     monitoring.startMonitoring();
 }, 5000);
