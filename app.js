@@ -8,6 +8,7 @@ const monitoring = require('./utils/monitoring.js');
 const reportRouter = require('./routes/report');
 const queryRouter = require('./routes/query');
 const createRouter = require('./routes/create');
+const deleteRouter = require('./routes/delete');
 
 const app = express();
 
@@ -36,5 +37,6 @@ setInterval(() => {
 app.use('/api/report', reportRouter);
 app.use('/api/query/', queryRouter);
 app.use('/api/create', createRouter);
+app.use('/api/delete', deleteRouter);
 
 module.exports = app;

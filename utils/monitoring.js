@@ -39,13 +39,11 @@ module.exports = {
                         console.error(error);
                     },
                     complete() {
-                        //console.log(mostRecentTime);
                         const lastTime = (new Date().getTime() - new Date(mostRecentTime).getTime()) / 60000;
                         const checkStatusQuery = SqlString.format('SELECT status FROM monitors WHERE uuid=?', [row.uuid]);
                         const status = connection.query(checkStatusQuery)
                             .then((status) => {
                             status = status[0].status;
-                            //console.log(status);
                             if (lastTime > 2 && status === 'up') {
                                 const setDownQuery = SqlString.format('UPDATE monitors SET status="down" WHERE uuid=?', [row.uuid]);
                                 connection.query(setDownQuery);
@@ -59,21 +57,22 @@ module.exports = {
                                 IP: ${row.ip}
                                 Time noticed at: ${new Date()}
                                 `;
-                                const transporter = nodemailer.createTransport('smtp://hwgilbert16@gmail.com:tjzecesmgkxgpmsw@smtp.gmail.com');
+                                const transporter = nodemailer.createTransport({
+                                    host: "mail.aurinsk.com",
+                                    port: 587,
+                                    secure: false,
+                                    auth: {
+                                        user: "alerts@aurinsk.com",
+                                        pass: "7Y<}Q+LfdMV>ZjEb8c6m"
+                                    }
+                                });
                                 const mailOptions = {
-                                    from: 'hwgilbert16@gmail.com',
+                                    from: 'Alerts <alerts@aurinsk.com>',
                                     to: row.email,
                                     subject: `${row.name} monitor is DOWN`,
                                     text: messageBody
                                 };
-                                transporter.sendMail(mailOptions, (err, data) => {
-                                    if (err) {
-                                        console.log('Error with sending email');
-                                    }
-                                    else {
-                                        console.log('Email sent successfully');
-                                    }
-                                });
+                                transporter.sendMail(mailOptions);
                                 console.log('set down');
                             }
                             else if (lastTime < 2 && status === 'down') {
@@ -89,22 +88,22 @@ module.exports = {
                                 IP: ${row.ip}
                                 Time noticed at: ${new Date()}
                                 `;
-                                const transporter = nodemailer.createTransport('smtp://hwgilbert16@gmail.com:tjzecesmgkxgpmsw@smtp.gmail.com');
-                                const mailOptions = {
-                                    from: 'hwgilbert16@gmail.com',
-                                    to: row.email,
-                                    subject: `${row.name} monitor is UP`,
-                                    text: messageBody
-                                };
-                                transporter.sendMail(mailOptions, (err, data) => {
-                                    if (err) {
-                                        console.log('Error with sending email');
-                                    }
-                                    else {
-                                        console.log('Email sent successfully');
+                                const transporter = nodemailer.createTransport({
+                                    host: "mail.aurinsk.com",
+                                    port: 587,
+                                    secure: false,
+                                    auth: {
+                                        user: "alerts@aurinsk.com",
+                                        pass: "7Y<}Q+LfdMV>ZjEb8c6m"
                                     }
                                 });
-                                console.log('set up');
+                                const mailOptions = {
+                                    from: 'Alerts <alerts@aurinsk.com>',
+                                    to: row.email,
+                                    subject: `${row.name} monitor is DOWN`,
+                                    text: messageBody
+                                };
+                                transporter.sendMail(mailOptions);
                             }
                         });
                     }
