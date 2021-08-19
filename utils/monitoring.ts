@@ -47,7 +47,7 @@ module.exports = {
                                 const setDownQuery = SqlString.format('UPDATE monitors SET status="down" WHERE uuid=?', [row.uuid]);
                                 connection.query(setDownQuery);
 
-                                const messageBody = `
+                                let messageBody = `
                                 Hello,
                                 
                                 One of your Minecraft server monitors is now down.
@@ -57,6 +57,10 @@ module.exports = {
                                 IP: ${row.ip}
                                 Time noticed at: ${new Date()}
                                 `;
+                                messageBody = messageBody
+                                    .split("\n")
+                                    .map((line) => line.trim())
+                                    .join("\n");
 
                                 const transporter = nodemailer.createTransport({
                                     host: "mail.aurinsk.com",
@@ -81,7 +85,7 @@ module.exports = {
                                 const setUpQuery = SqlString.format('UPDATE monitors SET status="up" WHERE uuid=?', [row.uuid]);
                                 connection.query(setUpQuery);
 
-                                const messageBody = `
+                                let messageBody = `
                                 Hello,
                                 
                                 One of your Minecraft server monitors is now back online.
@@ -91,6 +95,10 @@ module.exports = {
                                 IP: ${row.ip}
                                 Time noticed at: ${new Date()}
                                 `;
+                                messageBody = messageBody
+                                    .split("\n")
+                                    .map((line) => line.trim())
+                                    .join("\n");
 
                                 const transporter = nodemailer.createTransport({
                                     host: "mail.aurinsk.com",
@@ -104,7 +112,7 @@ module.exports = {
                                 const mailOptions = {
                                     from: 'Alerts <alerts@aurinsk.com>',
                                     to: row.email,
-                                    subject: `${row.name} monitor is DOWN`,
+                                    subject: `${row.name} monitor is UP`,
                                     text: messageBody
                                 }
 
