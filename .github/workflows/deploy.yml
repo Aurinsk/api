@@ -1,0 +1,67 @@
+# This workflow will do a clean install of node dependencies, cache/restore them, build the source code and run tests across different versions of node
+# For more information see: https://help.github.com/actions/language-and-framework-guides/using-nodejs-with-github-actions
+
+name: Deploy to website VM
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  deploy:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Deploy
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.API_HOST }}
+        username: ${{ secrets.API_USERNAME }}
+        key: ${{ secrets.API_PRIVATEKEY }}
+        port: ${{ secrets.API_PORT }}
+        passphrase: ${{ secrets.API_PASSPHRASE }}
+        script: |
+          export NODE_ENV=${{ secrets.API_NODE_ENV }}
+          export INFLUX_URL=${{ secrets.API_INFLUX_URL }}
+          export INFLUX_TOKEN=${{ secrets.API_INFLUX_TOKEN }}
+          export INFLUX_ORG=${{ secrets.API_INFLUX_ORG }}
+          export INFLUX_BUCKET=${{ secrets.API_INFLUX_BUCKET }}
+          export INFLUX_USERNAME=${{ secrets.API_INFLUX_USERNAME }}
+          export INFLUX_PASSWORD=${{ secrets.API_INFLUX_PASSWORD }}
+          export DB_HOST=${{ secrets.API_DB_HOST }}
+          export DB_DATABASE=${{ secrets.API_DB_DATABASE }}
+          export DB_USER=${{ secrets.API_DB_USER }}
+          export DB_PASSWORD=${{ secrets.API_DB_PASSWORD }}
+          export DB_PORT=${{ secrets.API_DB_PORT }}
+          export JWT_SECRET=${{ secrets.API_JWT_SECRET }}
+          cd ~/api
+          forever stop bin/www
+          cd ~
+          rm -rf old
+          mkdir old
+          mv api ~/old
+          mkdir api
+          cd ~/api
+          git init
+          git pull git@github.com:Aurinsk/api.git
+          npm install
+          touch .env
+          echo 'NODE_ENV=$NODE_ENV' >> .env
+          echo 'INFLUX_URL=$INFLUX_URL' >> .env
+          echo 'INFLUX_TOKEN=$INFLUX_TOKEN' >> .env
+          echo 'INFLUX_ORG=$INFLUX_ORG' >> .env
+          echo 'INFLUX_BUCKET=$INFLUX_BUCKET' >> .env
+          echo 'INFLUX_USERNAME=$INFLUX_USERNAME' >> .env
+          echo 'INFLUX_PASSWORD=$INFLUX_PASSWORD' >> .env
+          echo 'DB_HOST=$DB_HOST' >> .env
+          echo 'DB_DATABASE=$DB_DATABASE' >> .env
+          echo 'DB_USER=$DB_USER' >> .env
+          echo 'DB_PASSWORD=$DB_PASSWORD' >> .env
+          echo 'DB_PORT=$DB_PORT' >> .env
+          echo 'JWT_SECRET=$JWT_SECRET' >> .env
+          pkill -f node
+          forever start bin/www
+          sudo iptables -t nat -A PREROUTING -p tcp --dport 80 -j REDIRECT --to-ports 3000
+          sudo iptables -t nat -A PREROUTING -p tcp --dport 443 -j REDIRECT --to-ports 3050
