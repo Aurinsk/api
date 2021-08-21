@@ -1,4 +1,3 @@
-const createError = require("http-errors");
 const express = require("express");
 const logger = require('morgan');
 const cors = require('cors');
@@ -13,9 +12,19 @@ const deleteRouter = require('./routes/delete');
 const app = express();
 
 app.use(cors());
-app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+
+if (process.env.NODE_ENV === 'PRODUCTION') {
+    app.use((req, res, next) => {
+        if (!req.secure && req.get('x-forwarded-proto') !== 'https' && process.env.NODE_ENV !== "DEVELOPMENT") {
+            return res.redirect('https://' + req.get('host') + req.url);
+        }
+        next();
+    })
+} else {
+    app.use(logger('dev'));
+}
 
 // check authorization header for a valid jwt
 //app.use(jwt({secret: process.env.JWT_SECRET, algorithms: ['HS256']}).unless({path: ['/api/report', /^\/api\/query\/time\/.*/]}));
