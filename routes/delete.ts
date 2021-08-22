@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const pool = require('../utils/db.js');
-const axios = require('axios');
+import fetch = require('node-fetch');
 
 const {InfluxDB, Point, HttpError} = require('@influxdata/influxdb-client');
 const SqlString = require('sqlstring');
@@ -32,19 +32,10 @@ router.delete('/monitor/:uuid', async (req, res) => {
         return;
     }
 
-    // await fetch(`${url}api/v2/delete?org=${org}&bucket=${bucket}`, {
-    //     method: "POST",
-    //     body: JSON.stringify({
-    //         "start": 0,
-    //         "stop": new Date().toISOString(),
-    //         "predicate": `exampleTag=\\\\"${uuid}\\\\"`
-    //     })
-    // });
-
     const data = JSON.stringify({
-        "start": 0,
+        "start": "2021-07-01T06:22:16.000Z",
         "stop": new Date().toISOString(),
-        "predicate": `exampleTag=\\\\"${uuid}\\\\"`
+        "predicate": `uuid=\"${uuid}\"`
     });
 
     const config = {
@@ -54,34 +45,32 @@ router.delete('/monitor/:uuid', async (req, res) => {
         }
     }
 
-    console.log(`${url}api/v2/delete?org=${org}&bucket=${bucket}`);
-    axios.post(`${url}api/v2/delete?org=${org}&bucket=${bucket}`, data, config)
-        .then(async () => {
-            const query = SqlString.format('DELETE FROM monitors WHERE uuid = ?', [uuid]);
-            const connection = await pool.getConnection();
-            const response = await connection.query(query);
-
-            res.sendStatus(200);
-            res.end();
+    try {
+        let response = await fetch(`${url}api/v2/delete?org=${org}&bucket=${bucket}`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Token ${token}`,
+                'Content-Type': 'application/json'
+            },
+            body: data
         })
 
-    // const deleteFromInflux = http.request({
-    //     hostname: '192.168.1.137',
-    //     port: 8086,
-    //     path: `/api/v2/delete/?org=${org}&bucket=${bucket}`,
-    //     method: 'POST',
-    //     headers: {
-    //         'Authorization': `Token ${token}`,
-    //         'Content-Type': 'application/json'
-    //     }
-    // }, async () => {
-    //     const query = SqlString.format('DELETE FROM monitors WHERE uuid = ?', [uuid]);
-    //     const connection = await pool.getConnection();
-    //     const response = await connection.query(query);
-    //
-    //     res.sendStatus(200);
-    //     res.end();
-    // })
+        if (response.status !== 204) {
+            console.log(response.status);
+            res.json({'StatusCode': 1}).end();
+            return;
+        }
+    } catch (e) {
+        res.json({'StatusCode': 1}).end();
+        return;
+    }
+
+    const query = SqlString.format('DELETE FROM monitors WHERE uuid = ?', [uuid]);
+    const connection = await pool.getConnection();
+    await connection.query(query);
+    connection.end();
+
+    res.json({'StatusCode': 0}).end();
 });
 
 module.exports = router;
