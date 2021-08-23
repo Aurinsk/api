@@ -22,7 +22,8 @@ const token = process.env.INFLUX_TOKEN;
 const org = process.env.INFLUX_ORG;
 const bucket = process.env.INFLUX_BUCKET;
 /* ----- */
-router.get('/:uuid/:type/:time', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+// get graph info for monitor
+router.get('/graph/:uuid/:type/:time', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const path = req.originalUrl.split("/");
     path.shift();
     const uuid = req.params.uuid;
@@ -63,6 +64,7 @@ router.get('/:uuid/:type/:time', (req, res) => __awaiter(void 0, void 0, void 0,
         },
     });
 }));
+// get most recent time of monitor
 router.get('/time/:uuid/', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const uuid = req.params.uuid;
     const queryApi = new InfluxDB({ url, token }).getQueryApi(org);
@@ -86,6 +88,31 @@ router.get('/time/:uuid/', (req, res) => __awaiter(void 0, void 0, void 0, funct
         },
     });
 }));
+// get last value of monitor
+router.get('/recent/:type/:uuid/', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const uuid = req.params.uuid;
+    const type = req.params.type;
+    console.log(`from(bucket: "reports") |> range(start: 0, stop: now()) |> filter(fn: (r) => r["_field"] == "${type}") |> filter(fn: (r) => r["uuid"] == "${uuid}") |> last()`);
+    const queryApi = new InfluxDB({ url, token }).getQueryApi(org);
+    const fluxQuery = `from(bucket: "reports") |> range(start: 0, stop: now()) |> filter(fn: (r) => r["_field"] == "${type}") |> filter(fn: (r) => r["uuid"] == "${uuid}") |> last()`;
+    let data = [];
+    let valueArr = [];
+    let timeArr = [];
+    queryApi.queryRows(fluxQuery, {
+        next(row, tableMeta) {
+            const o = tableMeta.toObject(row);
+            data.push(o._value);
+        },
+        error(error) {
+            console.error(error);
+        },
+        complete() {
+            res.status(200).json(data[0]);
+            res.end();
+        },
+    });
+}));
+// get status of monitor
 router.get('/status/:uuid', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const uuid = req.params.uuid;
     // authentication check query
