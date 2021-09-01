@@ -197,6 +197,13 @@ router.get('/:email', async (req, res) => {
     });
 });
 
+// get plugin version
+router.get('/plugin-version', (req, res) => {
+    const pluginVersion = process.env.PLUGIN_VERSION;
+
+    res.send(pluginVersion).end();
+})
+
 // router.get('/create/:ip', async (req, res) => {
 //     const ip = req.params.ip;
 //     const query = SqlString.format('SELECT * FROM monitors WHERE ip = ?', [ip]);
