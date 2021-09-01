@@ -132,14 +132,13 @@ router.get('/status/:uuid', (req, res) => __awaiter(void 0, void 0, void 0, func
     connection.end();
     res.status(200).json(status);
 }));
-router.get('/:email', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+router.get('/monitors/:email', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const email = decodeURIComponent(req.params.email);
     if (email !== req.user.email) {
         res.sendStatus(401);
         res.end();
         return;
     }
-    let rows = [];
     const query = SqlString.format('SELECT * FROM monitors WHERE email = ?', [email]);
     const conn = yield pool.getConnection();
     const response = yield conn.query(query);

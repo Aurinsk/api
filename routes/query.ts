@@ -146,7 +146,7 @@ router.get('/status/:uuid', async (req, res) => {
     res.status(200).json(status);
 });
 
-router.get('/:email', async (req, res) => {
+router.get('/monitors/:email', async (req, res) => {
     const email = decodeURIComponent(req.params.email);
 
     if (email !== req.user.email) {
@@ -154,8 +154,6 @@ router.get('/:email', async (req, res) => {
         res.end();
         return;
     }
-
-    let rows = [];
 
     const query = SqlString.format('SELECT * FROM monitors WHERE email = ?', [email]);
     const conn = await pool.getConnection();
