@@ -43,9 +43,9 @@ setInterval(() => {
     monitoring.startMonitoring();
 }, 5000);
 
-app.use('/api/report', reportRouter);
-app.use('/api/query/', queryRouter);
-app.use('/api/create', createRouter);
-app.use('/api/delete', deleteRouter);
+app.use('/report', reportRouter);
+app.use('/query/', queryRouter);
+app.use('/create', createRouter);
+app.use('/delete', deleteRouter);
 
 module.exports = app;

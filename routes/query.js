@@ -59,7 +59,6 @@ router.get('/graph/:uuid/:type/:time', (req, res) => __awaiter(void 0, void 0, v
         },
         complete() {
             data.push(valueArr, timeArr);
-            console.dir(data);
             res.status(200).json(data);
         },
     });
@@ -92,7 +91,6 @@ router.get('/time/:uuid/', (req, res) => __awaiter(void 0, void 0, void 0, funct
 router.get('/recent/:type/:uuid/', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const uuid = req.params.uuid;
     const type = req.params.type;
-    console.log(`from(bucket: "reports") |> range(start: 0, stop: now()) |> filter(fn: (r) => r["_field"] == "${type}") |> filter(fn: (r) => r["uuid"] == "${uuid}") |> last()`);
     const queryApi = new InfluxDB({ url, token }).getQueryApi(org);
     const fluxQuery = `from(bucket: "reports") |> range(start: 0, stop: now()) |> filter(fn: (r) => r["_field"] == "${type}") |> filter(fn: (r) => r["uuid"] == "${uuid}") |> last()`;
     let data = [];
@@ -176,7 +174,7 @@ router.get('/monitors/:email', (req, res) => __awaiter(void 0, void 0, void 0, f
 // get plugin version
 router.get('/plugin-version', (req, res) => {
     const pluginVersion = process.env.PLUGIN_VERSION;
-    res.send(pluginVersion).end();
+    res.json(pluginVersion).end();
 });
 // router.get('/create/:ip', async (req, res) => {
 //     const ip = req.params.ip;
