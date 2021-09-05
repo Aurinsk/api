@@ -8,6 +8,12 @@ router.post('/', async (req, res) => {
     const email = req.body.email;
     const name = req.body.name;
 
+    if (email !== req.user.email) {
+        res.sendStatus(401);
+        res.end();
+        return;
+    }
+
     const query = SqlString.format('SELECT * FROM monitors WHERE ip = ?', [ip]);
     const conn = await pool.getConnection();
     const response = await conn.query(query);

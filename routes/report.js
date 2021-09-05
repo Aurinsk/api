@@ -39,11 +39,12 @@ router.post('/', async (req, res) => {
 
     const point1 = new Point('server_report')
         .tag('uuid', data.uuid)
-        .floatField('player_count', data.playercount)
-        .floatField('cpu_usage', data.cpuload)
-        .floatField('memory_usage', parseInt(data.memoryusage) / 1000000)
+        .floatField('playercount', data.playercount)
+        .floatField('cpu', data.cpu)
+        .floatField('memory', parseInt(data.memory) / 1000000)
         .floatField('tps', data.tps)
-        .stringField('version', data.version)
+        .stringField('minecraftVersion', data.minecraftVersion)
+        .stringField('pluginVersion', data.pluginVersion)
         .stringField('ip', data.ip);
 
     writeApi.writePoint(point1);
